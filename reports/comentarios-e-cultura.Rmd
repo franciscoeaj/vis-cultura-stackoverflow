@@ -1,8 +1,13 @@
 ---
-title: "Comentários e cultura"
+title: "FPCC 2 - Lab. 03, Pt. 02 - Comentários e cultura"
+author: "Francisco E. Júnior"
+date: "19 de março de 2020"
 output:
     html_document:
-    df_print: paged
+      df_print: paged
+      toc: true
+      toc_float:
+        collapsed: false
 theme: sandstone
 ---
 
@@ -10,7 +15,7 @@ theme: sandstone
 library(tidyverse)
 library(here)
 library(viridis)
-source(here::here("code/lib.R"))
+library(plotly)
 theme_set(theme_bw())
 
 knitr::opts_chunk$set(tidy = FALSE,
@@ -44,11 +49,111 @@ Considerando essa variável, queremos examinar a relação entre ela e o quão h
 
 Faça uma visualização que usa os princípios de eficácia no projeto de visualizações para facilitar as comparações que você acha que são as mais importantes para entendermos esse contexto. 
 
+Vamos analisar a relação entre a proporção das pessoas do país que comentou nas questões de outros e o quanto as pessoas desse país tem acesso à Internet. As cores dos pontos representam o quão hierárquicas são as relações naquele país. O gráfico da esquerda representa o site StackOverflow e o gráfico da direita representa o site SuperUser.
+```{r warning=FALSE}
+vis_principal <- dados %>% ggplot(aes(
+    x = Internet,
+    y = comentaram_prop,
+    country = country,
+    color = PDI
+)) + geom_point() + facet_grid(. ~ site)
+
+ggplotly(vis_principal)
+
+dadosFiltrados = dados %>%
+    filter(!is.na(Internet) & !is.na(comentaram_prop))
+
+cor(dadosFiltrados$Internet, dadosFiltrados$comentaram_prop)
+```
+Podemos perceber algumas relações nessa visualização: primeiramente, existe uma correlação positiva entre a proporção de comentários feitos nas perguntas dos outros e o quanto um determinado país tem acesso à Internet. Outra coisa que percebemos também é que os pontos mais escuros (que são os países menos individualistas) são também os quem mais comentam nas perguntas de outros usuários de cada um dos sites.
+
 ## Outras formas de ver
 
 Em seguida, faça 5 visualizações que usem as mesmas variáveis e também pontos, mas que sejam **menos eficazes** que a que você escolheu acima. 
+
+### 1. Formato dos pontos para agrupar os sites
+```{r warning=FALSE}
+vis_menos_eficaz_1 <- dados %>% ggplot(aes(
+    x = Internet,
+    y = comentaram_prop,
+    country = country,
+    color = PDI,
+    shape = site
+)) + geom_point()
+
+ggplotly(vis_menos_eficaz_1)
+```
+Se removermos o agrupamento dos gráficos (como feito no primeiro exemplo) e ainda assim quisermos informar visualmente de qual site vem aquela informação, podemos alterar o formato dos pontos (no exemplo acima, os quadrados representao o StackOverflow e os triângulos representam o SuperUser). No entanto, isso gera uma maior quantidade de pontos num mesmo gráfico, o que pode dificultar a visualização e entendimento do leitor.
+
+
+### 2. Tamanho dos pontos para exibir a quantidade de usuários
+```{r warning=FALSE}
+vis_menos_eficaz_2 <- dados %>% ggplot(aes(
+    x = Internet,
+    y = comentaram_prop,
+    country = country,
+    color = PDI,
+    size = usuarios
+)) + geom_point() + facet_grid(. ~ site)
+
+ggplotly(vis_menos_eficaz_2)
+```
+O tamanho dos pontos ajuda a diferenciar quais são os países que têm mais usuários e quais têm menos, mas essa forma de visualização não é tão eficaz para comparar quais países têm menos usuários, dado que temos muitos pontos pequenos com pouca variação no tamanho de exibição (em outras palavras, é fácil perceber a variação de tamanhos, mas não é tão fácil comparar pontos pequenos entre eles, principalmente se não estiverem próximos).
+
+### 3. Cor dos pontos para agrupar os sites
+```{r warning=FALSE}
+vis_menos_eficaz_3 <- dados %>% ggplot(aes(
+    x = Internet,
+    y = comentaram_prop,
+    country = country,
+    color = site
+)) + geom_point()
+
+ggplotly(vis_menos_eficaz_3)
+```
+Nessa visualização, sacrificamos as cores dos pontos que antes exibia o quão hierárquicas são as relações naquele país para exibirmos o site. Essa visualização é eficaz para as variáveis que a mesma tenta exibir, no entanto, comparada com a primeira visualização desse relatório, ela é menos eficaz por ter menos dados exibidos para o leitor.
+
+### 4. Tamanho dos pontos exibem quão hierárquicas são as relações no país (ao invés da cor)
+```{r warning=FALSE}
+vis_menos_eficaz_4 <- dados %>% ggplot(aes(
+    x = Internet,
+    y = comentaram_prop,
+    country = country,
+    size = PDI
+)) + geom_point(alpha = 0.6) + facet_grid(. ~ site)
+
+ggplotly(vis_menos_eficaz_4)
+```
+Aqui, ainda conseguimos perceber que os pontos menores (países menos individualistas) são os que mais comentam, contudo, temos uma sobreposição de vários pontos (percebemos por estarem transparentes), que pode dificultar no entendimento dessa visualização.
+
+### 5. PDI no tamanho dos pontos e quantidade de usuários nas cores
+```{r warning=FALSE}
+vis_menos_eficaz_5 <- dados %>% ggplot(aes(
+    x = Internet,
+    y = comentaram_prop,
+    country = country,
+    size = PDI,
+    color = usuarios
+)) + geom_point(alpha = 0.7) + facet_grid(. ~ site)
+
+ggplotly(vis_menos_eficaz_5)
+```
+Com relação ao PDI: fica difícil comparar os pontos com maiores PDI por possuírem um variação muito pequena. Exibir a quantidade de usuários na cor dos pontos também dificulta a visualização quando se compara pontos com pequena variação na cor.
 
 ## Bônus
 
 Inclua o continente dos países (`six_regions`) na visualização.
 
+Utilizando a função `facet_wrap` do ggplot para agrupar em gráficos por regiões, temos:
+```{r warning=FALSE}
+vis_six_regions <- dados %>% filter(!is.na(six_regions)) %>% 
+    ggplot(aes(
+        x = Internet,
+        y = comentaram_prop,
+        country = country,
+        color = PDI
+    )) + geom_point() + facet_wrap(~ six_regions)
+
+ggplotly(vis_six_regions)
+```
+Com esse agrupamento, percebe-se primeiramente que a maior concentração de pontos está no continente `europe_central_asia`. Os continentes `south_asia` e `sub_saharian_africa` são os que contêm menos pontos. Percebe-se também que a maior quantidade de países menos individualistas (baixo PDI) estão no continente `europe_central_asia`.
